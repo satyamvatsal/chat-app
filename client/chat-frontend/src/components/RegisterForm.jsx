@@ -17,7 +17,9 @@ export default function RegisterForm({ setToken, setUsername }) {
     const publicKey = sodium.to_base64(keyPair.publicKey);
     const privateKey = sodium.to_base64(keyPair.privateKey);
 
-    const res = await fetch("https://chatapi.satyamvatsal.me/auth/register", {
+    const API_BASE = "https://chatapi.satyamvatsal.me";
+
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: usernameInput, password, publicKey }),
