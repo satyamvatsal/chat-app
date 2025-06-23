@@ -39,7 +39,7 @@ const useWebSocketWithReconnect = ({
     if (!token) return;
     if (ws.current?.readyState === WebSocket.OPEN) return;
 
-    ws.current = new WebSocket("ws://10.3.141.254:3001");
+    ws.current = new WebSocket("wss://chatapi.satyamvatsal.me");
 
     ws.current.onopen = () => {
       console.log("WebSocket connected");

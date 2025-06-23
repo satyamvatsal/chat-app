@@ -2,7 +2,9 @@ import sodium from "libsodium-wrappers";
 import { getPrivateKey } from "../db";
 
 const getPublicKey = async (userId) => {
-  const response = await fetch(`http://10.3.141.254:3001/publickey/${userId}`);
+  const response = await fetch(
+    `https://chatapi.satyamvatsal.me/publickey/${userId}`,
+  );
   const data = await response.json();
   if (response.ok) {
     return data.publicKey;
