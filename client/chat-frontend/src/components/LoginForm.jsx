@@ -12,7 +12,7 @@ export default function LoginForm({ setToken, setUsername }) {
     const publicKey = sodium.to_base64(keyPair.publicKey);
     const privateKey = sodium.to_base64(keyPair.privateKey);
 
-    const res = await fetch("https:chatapi.satyamvatsal.me/auth/login", {
+    const res = await fetch("https://chatapi.satyamvatsal.me/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: usernameInput, password, publicKey }),
