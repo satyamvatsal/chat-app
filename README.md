@@ -160,12 +160,6 @@ REDIS_URL=redis://localhost:6379
 
 ---
 
-## 📸 Screenshots
-
-> _Add screenshots here (optional)_  
-> You can use tools like `flameshot` or `spectacle` on Linux and host them in the GitHub repo or an image CDN.
-
----
 
 ## 📋 To-Do / Issues
 
