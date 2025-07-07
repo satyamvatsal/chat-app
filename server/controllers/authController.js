@@ -20,7 +20,7 @@ async function registerUser(username, password, publicKey) {
     publicKey,
   });
   const cacheKey = `publicKey:${username}`;
-  await redis.set(cacheKey, publicKey);
+  await redis.setex(cacheKey, 60, publicKey);
   const token = jwt.sign({ id: username }, SECRET, { expiresIn: "10d" });
   return token;
 }
@@ -31,14 +31,12 @@ async function loginUser(username, password, publicKey) {
 
   const user = await users.findOne({ username });
   if (!user) throw new Error("User not found");
-
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) throw new Error("Invalid password");
   const token = jwt.sign({ id: username }, SECRET, { expiresIn: "10d" });
   await users.updateOne({ username }, { $set: { publicKey: publicKey } });
-  console.log("public key: ", publicKey);
   const cacheKey = `publicKey:${username}`;
-  await redis.set(cacheKey, publicKey);
+  await redis.setex(cacheKey, 60, publicKey);
   return token;
 }
 

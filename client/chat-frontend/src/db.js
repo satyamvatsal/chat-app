@@ -1,4 +1,5 @@
 import Dexie from "dexie";
+import { handlePrivateKeyChange } from "./crypto/encryption";
 
 export const initDB = (username) => {
   const db = new Dexie(`chatDatabase:${username}`);
@@ -53,6 +54,12 @@ export const getPrivateKey = async (username) => {
 
 export const savePrivateKey = async (username, key) => {
   const db = initDB(username);
-  await db.keys.update("self", { privateKey: key });
+  try {
+    const status = await handlePrivateKeyChange(key);
+    if (status == false) throw new Error("Cannot save public key to server");
+    await db.keys.update("self", { privateKey: key });
+  } catch (err) {
+    console.error("Error while saving private key, ", err);
+  }
 };
 export default initDB;

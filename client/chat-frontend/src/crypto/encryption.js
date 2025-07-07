@@ -1,13 +1,23 @@
 import sodium from "libsodium-wrappers";
 import { getPrivateKey } from "../db";
+import { toast } from "react-toastify";
 
 const getPublicKey = async (userId) => {
-  const response = await fetch(
-    `https://chatapi.satyamvatsal.me/publickey/${userId}`,
-  );
-  const data = await response.json();
-  if (response.ok) {
-    return data.publicKey;
+  try {
+    const response = await fetch(
+      `https://chatapi.satyamvatsal.me/publickey/${userId}`,
+    );
+    const data = await response.json();
+    if (response.ok) {
+      return data.publicKey;
+    } else {
+      toast("server error", "error");
+      return null;
+    }
+  } catch (err) {
+    if (err.error === "User not found.") {
+      toast("receiver does not exists", "error");
+    }
   }
   return null;
 };
@@ -17,7 +27,7 @@ export const encryptText = async (message, receiver) => {
   const privateKeyB64 = await getPrivateKey(username);
   const receiverPublicKeyB64 = await getPublicKey(receiver);
   if (!privateKeyB64 || !receiverPublicKeyB64) {
-    throw new Error("Missing private or public key");
+    return { ciphertext: null, nonce: null };
   }
   const nonce = sodium.randombytes_buf(sodium.crypto_box_NONCEBYTES);
   const ciphertext = sodium.crypto_box_easy(
@@ -44,4 +54,37 @@ export const decryptText = async (message, sender, nonce) => {
     sodium.from_base64(privateKey),
   );
   return sodium.to_string(decrypted);
+};
+
+export const handlePrivateKeyChange = async (privateKeyBase64) => {
+  const privateKey = sodium.from_base64(privateKeyBase64);
+  const publicKey = sodium.crypto_scalarmult_base(privateKey);
+  const publicKeyBase64 = sodium.to_base64(publicKey);
+  const token = localStorage.getItem("authToken");
+
+  try {
+    const response = await fetch(
+      "https://chatapi.satyamvatsal.me/publicKey/save-publickey",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, publicKey: publicKeyBase64 }),
+      },
+    );
+
+    if (!response.ok) {
+      toast("server rejected public key update");
+      console.error(
+        "Server rejected public key update:",
+        await response.text(),
+      );
+      return false;
+    } else {
+      toast("Private key saved!", "success");
+      return true;
+    }
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
 };

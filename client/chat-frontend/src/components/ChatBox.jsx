@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
+import { ToastContainer, Flip, toast } from "react-toastify";
 import { addMessage, getMessages } from "../db";
 import { decryptText, encryptText } from "../crypto/encryption";
 
@@ -14,7 +15,7 @@ export default function ChatBox({
 }) {
   const [message, setMessage] = useState("");
   const scrollRef = useRef(null);
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = 20;
   const [offset, setOffset] = useState(0);
   const sendSound = new Audio("/sounds/sent.mp3");
   const textareaRef = useRef(null);
@@ -126,28 +127,40 @@ export default function ChatBox({
 
   const sendMessage = async () => {
     if (!message.trim()) return;
-    const { ciphertext, nonce } = await encryptText(message, receiver);
-    const newMsgPlain = {
-      from: username,
-      to: receiver,
-      text: message,
-      timestamp: Date.now(),
-      nonce,
-    };
-    ws.current.send(
-      JSON.stringify({
-        type: "message",
+    try {
+      const { ciphertext, nonce } = await encryptText(message, receiver);
+      if (!ciphertext || !nonce) return null;
+      const newMsgPlain = {
+        from: username,
         to: receiver,
-        text: ciphertext,
-        nonce: nonce,
+        text: message,
         timestamp: Date.now(),
-      }),
-    );
-    addMessage(username, newMsgPlain);
-    setLogs((prev) => [...prev, newMsgPlain]);
-    setMessage("");
-    sendSound.currentTime = 0;
-    sendSound.play().catch(console.warn);
+        nonce,
+      };
+      if (receiver != username) {
+        if (ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(
+            JSON.stringify({
+              type: "message",
+              to: receiver,
+              text: ciphertext,
+              nonce,
+              timestamp: Date.now(),
+            }),
+          );
+        } else {
+          console.error("WebSocket is not open. Message not sent.");
+          toast("connection not active.", "error");
+        }
+      }
+      addMessage(username, newMsgPlain);
+      setLogs((prev) => [...prev, newMsgPlain]);
+      setMessage("");
+      sendSound.currentTime = 0;
+      sendSound.play().catch(console.warn);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -158,14 +171,15 @@ export default function ChatBox({
   };
 
   const handleTyping = () => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(
-        JSON.stringify({
-          type: "typing",
-          to: receiver,
-        }),
-      );
-    }
+    if (receiver != username)
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(
+          JSON.stringify({
+            type: "typing",
+            to: receiver,
+          }),
+        );
+      }
   };
 
   return (
@@ -239,6 +253,20 @@ export default function ChatBox({
           </div>
         </div>
       </div>
+
+      <ToastContainer
+        position="top-center"
+        autoClose={2500}
+        hideProgressBar
+        newestOnTop
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        transition={Flip}
+      />
     </div>
   );
 }

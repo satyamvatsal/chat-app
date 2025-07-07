@@ -19,7 +19,7 @@ export default function RegisterForm({ setToken, setUsername }) {
 
     const API_BASE = "https://chatapi.satyamvatsal.me";
 
-    const res = await fetch(`${API_BASE}/auth/login`, {
+    const res = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: usernameInput, password, publicKey }),

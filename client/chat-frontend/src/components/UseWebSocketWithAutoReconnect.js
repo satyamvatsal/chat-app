@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { addMessage, getMessages } from "../db";
 import { decryptText } from "../crypto/encryption";
+import { toast } from "react-toastify";
+import { playMsgSound, playReceiveSound } from "../utils/soundManager";
 
 const loadRecentChats = async (username) => {
   const msgs = await getMessages(username);
@@ -16,7 +18,6 @@ const loadRecentChats = async (username) => {
     }
   }
 
-  // Sort recent chats by timestamp descending
   return Object.values(chatMap).sort((a, b) => b.timestamp - a.timestamp);
 };
 
@@ -30,10 +31,11 @@ const useWebSocketWithReconnect = ({
 }) => {
   const ws = useRef(null);
   const [typingUsers, setTypingUsers] = useState({});
-  const receiveSound = new Audio("/sounds/received.mp3");
-  const newSound = new Audio("/sounds/new.mp3");
   const reconnectAttempts = useRef(0);
   const reconnectTimeout = useRef(null);
+
+  const receiveSoundRef = useRef(null);
+  const newSoundRef = useRef(null);
 
   const connect = () => {
     if (!token) return;
@@ -42,6 +44,7 @@ const useWebSocketWithReconnect = ({
     ws.current = new WebSocket("wss://chatapi.satyamvatsal.me");
 
     ws.current.onopen = () => {
+      toast("connection established.", "success");
       console.log("WebSocket connected");
       reconnectAttempts.current = 0;
       ws.current.send(JSON.stringify({ type: "auth", token }));
@@ -65,38 +68,28 @@ const useWebSocketWithReconnect = ({
       }
 
       if (data.type === "message") {
-        const newMsgEncrypted = {
-          from: data.from,
-          to: username,
-          text: data.text,
-          nonce: data.nonce,
-          timestamp: data.timestamp,
-        };
-        await addMessage(username, newMsgEncrypted);
-
-        const ack = { id: data.id, type: "ack" };
-        ws.current.send(JSON.stringify(ack));
-
         const decryptedText = await decryptText(
           data.text,
           data.from,
           data.nonce,
         );
+        const newMsgPlain = {
+          from: data.from,
+          to: username,
+          text: decryptedText,
+          nonce: data.nonce,
+          timestamp: data.timestamp,
+        };
+        await addMessage(username, newMsgPlain);
+
+        const ack = { id: data.id, type: "ack" };
+        ws.current.send(JSON.stringify(ack));
+
         if (data.from === receiver) {
-          const newMsgPlain = {
-            ...newMsgEncrypted,
-            text: decryptedText, // Decrypted for display
-          };
           setLogs((prev) => [...prev, newMsgPlain]);
-          newSound.currentTime = 0;
-          newSound.play().catch((e) => {
-            console.warn("Could not play new message sound, ", e);
-          });
+          playMsgSound();
         } else {
-          receiveSound.currentTime = 0;
-          receiveSound.play().catch((e) => {
-            console.warn("Could not play send sound ", e);
-          });
+          playReceiveSound();
           if (Notification.permission === "granted") {
             const notif = new Notification(`New message from ${data.from}`, {
               body: decryptedText,
@@ -120,6 +113,7 @@ const useWebSocketWithReconnect = ({
     };
 
     ws.current.onerror = (e) => {
+      toast("connection error.", "error");
       console.error("WebSocket error. Closing connection...", e);
       ws.current.close();
     };
