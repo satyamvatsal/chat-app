@@ -4,7 +4,9 @@ import { toast } from "react-toastify";
 
 const getPublicKey = async (userId) => {
   try {
-    const response = await fetch(`http://localhost:3001/publickey/${userId}`);
+    const response = await fetch(
+      `https://chatapi.satyamvatsal.me/publickey/${userId}`,
+    );
     const data = await response.json();
     if (response.ok) {
       return data.publicKey;
@@ -62,7 +64,7 @@ export const handlePrivateKeyChange = async (privateKeyBase64) => {
 
   try {
     const response = await fetch(
-      "http://localhost:3001/publicKey/save-publickey",
+      "https://chatapi.satyamvatsal.me/publicKey/save-publickey",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

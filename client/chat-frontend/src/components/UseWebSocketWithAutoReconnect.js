@@ -38,7 +38,7 @@ const useWebSocketWithReconnect = ({
     if (!token) return;
     if (ws.current?.readyState === WebSocket.OPEN) return;
 
-    ws.current = new WebSocket("ws://localhost:3001");
+    ws.current = new WebSocket("wss://chatapi.satyamvatsal.me");
 
     ws.current.onopen = () => {
       toast("connection established.", "success");
