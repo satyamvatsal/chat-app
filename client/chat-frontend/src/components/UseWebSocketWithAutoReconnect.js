@@ -34,14 +34,11 @@ const useWebSocketWithReconnect = ({
   const reconnectAttempts = useRef(0);
   const reconnectTimeout = useRef(null);
 
-  const receiveSoundRef = useRef(null);
-  const newSoundRef = useRef(null);
-
   const connect = () => {
     if (!token) return;
     if (ws.current?.readyState === WebSocket.OPEN) return;
 
-    ws.current = new WebSocket("wss://chatapi.satyamvatsal.me");
+    ws.current = new WebSocket("ws://localhost:3001");
 
     ws.current.onopen = () => {
       toast("connection established.", "success");
@@ -73,6 +70,7 @@ const useWebSocketWithReconnect = ({
           data.from,
           data.nonce,
         );
+        console.log(decryptedText);
         const newMsgPlain = {
           from: data.from,
           to: username,
@@ -147,7 +145,7 @@ const useWebSocketWithReconnect = ({
       window.removeEventListener("online", handleOnline);
       clearTimeout(reconnectTimeout.current);
     };
-  }, [token, username, receiver]);
+  }, [token, username]);
 
   return { ws, typingUsers };
 };

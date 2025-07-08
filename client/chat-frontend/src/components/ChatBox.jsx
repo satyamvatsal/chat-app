@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import MessageBubble from "./MessageBubble";
 import { ToastContainer, Flip, toast } from "react-toastify";
 import { addMessage, getMessages } from "../db";
-import { decryptText, encryptText } from "../crypto/encryption";
+import { encryptText } from "../crypto/encryption";
+import { playSendSound } from "../utils/soundManager";
 
 export default function ChatBox({
   username,
@@ -17,7 +18,6 @@ export default function ChatBox({
   const scrollRef = useRef(null);
   const PAGE_SIZE = 20;
   const [offset, setOffset] = useState(0);
-  const sendSound = new Audio("/sounds/sent.mp3");
   const textareaRef = useRef(null);
   const [viewportHeight, setViewportHeight] = useState(
     window.visualViewport?.height || window.innerHeight,
@@ -32,26 +32,10 @@ export default function ChatBox({
             (m.from === receiver && m.to === username),
         )
         .sort((a, b) => a.timestamp - b.timestamp);
-      console.log(allMsgs);
 
-      const recentMsgs = allMsgs.slice(-PAGE_SIZE); // latest 50
-      const decryptedMsgs = await Promise.all(
-        recentMsgs.map(async (msg) => {
-          try {
-            const decryptedText = await decryptText(
-              msg.text,
-              msg.from,
-              msg.nonce,
-            );
-            console.log(decryptedText);
-            return { ...msg, text: decryptedText };
-          } catch (err) {
-            console.warn("Failed to decrypt message", msg, err);
-            return { ...msg, text: "[Decryption Failed]" };
-          }
-        }),
-      );
-      setLogs(decryptedMsgs);
+      const recentMsgs = allMsgs.slice(-PAGE_SIZE);
+
+      setLogs(recentMsgs);
       setOffset(1);
     };
 
@@ -148,16 +132,15 @@ export default function ChatBox({
               timestamp: Date.now(),
             }),
           );
+          addMessage(username, newMsgPlain);
+          setLogs((prev) => [...prev, newMsgPlain]);
+          setMessage("");
+          playSendSound();
         } else {
           console.error("WebSocket is not open. Message not sent.");
           toast("connection not active.", "error");
         }
       }
-      addMessage(username, newMsgPlain);
-      setLogs((prev) => [...prev, newMsgPlain]);
-      setMessage("");
-      sendSound.currentTime = 0;
-      sendSound.play().catch(console.warn);
     } catch (err) {
       console.log(err);
     }

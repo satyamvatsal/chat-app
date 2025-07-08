@@ -11,7 +11,7 @@ export default function LoginForm({ setToken, setUsername }) {
     const keyPair = sodium.crypto_box_keypair();
     const publicKey = sodium.to_base64(keyPair.publicKey);
     const privateKey = sodium.to_base64(keyPair.privateKey);
-    const API_BASE = "https://chatapi.satyamvatsal.me";
+    const API_BASE = "http://localhost:3001";
 
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",

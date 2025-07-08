@@ -92,7 +92,6 @@ function App() {
   const { ws, typingUsers } = useWebSocketWithReconnect({
     token,
     username,
-    receiver,
     setLogs,
     setReceiver,
     setRecentChats,
