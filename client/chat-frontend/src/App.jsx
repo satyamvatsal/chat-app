@@ -93,6 +93,7 @@ function App() {
     token,
     username,
     setLogs,
+    receiver,
     setReceiver,
     setRecentChats,
   });

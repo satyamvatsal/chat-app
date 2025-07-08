@@ -42,7 +42,6 @@ const useWebSocketWithReconnect = ({
 
     ws.current.onopen = () => {
       toast("connection established.", "success");
-      console.log("WebSocket connected");
       reconnectAttempts.current = 0;
       ws.current.send(JSON.stringify({ type: "auth", token }));
     };
@@ -70,7 +69,6 @@ const useWebSocketWithReconnect = ({
           data.from,
           data.nonce,
         );
-        console.log(decryptedText);
         const newMsgPlain = {
           from: data.from,
           to: username,
@@ -145,7 +143,7 @@ const useWebSocketWithReconnect = ({
       window.removeEventListener("online", handleOnline);
       clearTimeout(reconnectTimeout.current);
     };
-  }, [token, username]);
+  }, [token, username, receiver]);
 
   return { ws, typingUsers };
 };
