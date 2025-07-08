@@ -3,6 +3,7 @@ const http = require("http");
 const cors = require("cors");
 const { setupWebSocket } = require("./ws/websocket");
 const authRoutes = require("./routes/auth");
+const healthCheckRoute = require("./routes/health");
 const publicKeyRoutes = require("./routes/publicKey");
 require("dotenv").config();
 
@@ -11,6 +12,7 @@ const server = http.createServer(app);
 
 app.use(cors());
 app.use(express.json());
+app.use("/health-check", healthCheckRoute);
 app.use("/auth", authRoutes);
 app.use("/publicKey", publicKeyRoutes);
 
