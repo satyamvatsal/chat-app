@@ -1,6 +1,8 @@
 const Redis = require("ioredis");
+require("dotenv").config();
 
-const redis = new Redis("redis://localhost:6379");
+const REDIS_URL = process.env.REDIS_URL;
+const redis = new Redis(REDIS_URL);
 
 redis.on("connect", async () => {
   console.log("✅ Redis Client Connected");
