@@ -20,6 +20,19 @@ async function connectDB() {
   }
 }
 
+async function pingDB() {
+  try {
+    const database = await connectDB();
+    if (!database) throw new Error("Database instance is null");
+    const result = await database.command({ ping: 1 });
+    result.ok = 1;
+    return result;
+  } catch (err) {
+    console.error("Mongo ping failed: ", err);
+    return false;
+  }
+}
+
 function closeDB() {
   if (client.isConnected()) {
     client
@@ -32,5 +45,6 @@ function closeDB() {
 module.exports = {
   connectDB,
   closeDB,
+  pingDB,
   getDB: () => db,
 };
