@@ -41,7 +41,6 @@ const useWebSocketWithReconnect = ({
     ws.current = new WebSocket("wss://chatapi.satyamvatsal.me");
 
     ws.current.onopen = () => {
-      toast("connection established.", "success");
       reconnectAttempts.current = 0;
       ws.current.send(JSON.stringify({ type: "auth", token }));
     };
